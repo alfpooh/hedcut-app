@@ -3,6 +3,12 @@
   publish = "client/dist"
   functions = "netlify/functions"
 
+[build.environment]
+  # PORT는 값이 "3000"처럼 일반적이라 코드/문서 곳곳(기본값, 프록시 대상 등)에
+  # 우연히 등장한다. 실제로는 민감한 값이 아니고, Netlify Functions는 애초에
+  # 포트에 바인딩하지 않으므로 시크릿 스캐너 대상에서 제외한다.
+  SECRETS_SCAN_OMIT_KEYS = "PORT"
+
 # /api/* 요청을 Netlify Function(Express 앱 래핑)으로 전달
 [[redirects]]
   from = "/api/*"
