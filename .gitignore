@@ -3,6 +3,10 @@
 
 # 의존성
 node_modules/
+client/node_modules/
+
+# React 빌드 결과물
+client/dist/
 
 # macOS
 .DS_Store

@@ -3,9 +3,17 @@
   "configurations": [
     {
       "name": "hedcut",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "client"],
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "hedcut-server",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": false
     }
   ]
 }

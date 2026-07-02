@@ -15,7 +15,6 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-app.use(express.static('public')); // 정적 파일(HTML) 서빙
 app.use(express.json());
 
 // 이미지 처리 API 엔드포인트
@@ -103,6 +102,15 @@ app.post('/api/convert', upload.single('image'), async (req, res) => {
         res.status(500).json({ success: false, error: message });
     }
 });
+
+// 프로덕션에서는 React 빌드 결과물(client/dist)을 정적으로 서빙한다.
+// 개발 중에는 client/dist가 없으므로 Vite 개발 서버(client)를 따로 실행해야 한다.
+const clientDist = path.join(__dirname, 'client', 'dist');
+if (require('fs').existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    // SPA 라우팅: /api가 아닌 나머지 GET 요청은 index.html로 위임
+    app.use((req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));
