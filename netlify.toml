@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "client/dist"
+  functions = "netlify/functions"
+
+# /api/* 요청을 Netlify Function(Express 앱 래핑)으로 전달
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# React(SPA) 라우팅: 나머지 경로는 모두 index.html로 위임
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
