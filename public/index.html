@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WSJ 스타일 초상화 생성기</title>
+</head>
+<body>
+    <h2>WSJ 스타일 초상화 변환기</h2>
+    <form id="uploadForm">
+        <input type="file" id="imageInput" accept="image/*" required>
+        <button type="submit">변환하기</button>
+    </form>
+    <div id="loading" style="display:none;">처리 중입니다... 잠시만 기다려주세요.</div>
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        // 긴 변이 maxSize를 넘으면 비율을 유지하며 축소하고 JPEG Blob으로 반환
+        async function resizeImage(file, maxSize) {
+            const bitmap = await createImageBitmap(file);
+            const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(bitmap.width * scale);
+            canvas.height = Math.round(bitmap.height * scale);
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('imageInput');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                // 대용량 원본 사진은 API 오류를 유발하므로 업로드 전에 축소한다
+                // (브라우저가 디코딩 못하는 포맷이면 원본을 그대로 전송)
+                const formData = new FormData();
+                try {
+                    const resized = await resizeImage(fileInput.files[0], 1024);
+                    formData.append('image', resized, 'photo.jpg');
+                } catch {
+                    formData.append('image', fileInput.files[0]);
+                }
+
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <h3>변환 완료!</h3>
+                        <img src="${data.url}" alt="Hedcut Portrait" style="max-width: 400px; display: block; margin-bottom: 10px;">
+                        <a href="${data.url}" target="_blank">이미지 URL 열기</a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color:red;">오류: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">서버 통신 오류가 발생했습니다.</p>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
